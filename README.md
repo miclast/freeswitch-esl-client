@@ -1,7 +1,13 @@
-# freeswitch-esl
+# freeswitch-esl-client
+
+[![Gem Version](https://badge.fury.io/rb/freeswitch-esl-client.svg)](https://rubygems.org/gems/freeswitch-esl-client)
 
 A small, dependency-light Ruby client for the [FreeSWITCH](https://freeswitch.org/)
 Event Socket Layer (`mod_event_socket`), with **inbound** and **outbound** modes.
+
+> The gem is published as **`freeswitch-esl-client`** because `freeswitch-esl` was
+> already taken on RubyGems. The library keeps its original name: `require 'freeswitch-esl'`
+> (as does the module, `FreeswitchESL`). `require 'freeswitch-esl-client'` works too.
 
 - **Inbound** — your Ruby process connects to FreeSWITCH on `:8021`, subscribes to
   events and drives calls with `api` / `bgapi`.
@@ -35,19 +41,19 @@ Verified live against FreeSWITCH 1.11 and Asterisk 20 in Docker, on Ruby 3.2+ an
 
 ```ruby
 # Gemfile
-gem 'freeswitch-esl'
+gem 'freeswitch-esl-client'
 ```
 
 Or straight from Git while a release is not published yet:
 
 ```ruby
-gem 'freeswitch-esl', git: 'https://github.com/miclast/freeswitch-esl.git', tag: 'v0.1.0'
+gem 'freeswitch-esl-client', git: 'https://github.com/miclast/freeswitch-esl-client.git', tag: 'v0.1.0'
 ```
 
 Or from a local checkout:
 
 ```ruby
-gem 'freeswitch-esl', path: '../freeswitch-esl'
+gem 'freeswitch-esl-client', path: '../freeswitch-esl'
 ```
 
 Then:
@@ -274,11 +280,20 @@ it. Inside an existing reactor use `connect` and manage the reactor yourself.
 ```bash
 bundle install
 bundle exec rspec        # 26 examples, no external services required
-gem build freeswitch-esl.gemspec
+rake build               # builds pkg/freeswitch-esl-client-0.1.0.gem
 ```
 
 The spec suite spins up fake ESL servers in-process, so FreeSWITCH does not need to
 be running for the tests.
+
+### Releasing
+
+```bash
+rake release             # tags, pushes and uploads to rubygems.org
+# or manually:
+gem build freeswitch-esl-client.gemspec
+gem push freeswitch-esl-client-0.1.0.gem
+```
 
 ## Contributing
 

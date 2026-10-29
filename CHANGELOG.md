@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 First public release. Verified live against FreeSWITCH 1.11 and Asterisk 20 in Docker,
 on Ruby 3.2+ and 4.0.
 
+The gem is published as `freeswitch-esl-client` because `freeswitch-esl` was already
+taken on RubyGems. The library name is unchanged: `require 'freeswitch-esl'` and the
+`FreeswitchESL` namespace. `require 'freeswitch-esl-client'` is available as a shim.
+
 ### Added
 
 - **Inbound mode** — `FreeswitchESL::Client` connects to `mod_event_socket` (default
