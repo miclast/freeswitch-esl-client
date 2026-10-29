@@ -1,6 +1,26 @@
+# Bundler / dependencies
 /.bundle/
-/pkg/
-*.gem
+/vendor/bundle/
 Gemfile.lock
-.rspec_status
+
+# Built gems and packages
+/pkg/
 /tmp/
+*.gem
+
+# Test artifacts
+/coverage/
+.rspec_status
+
+# Local environment and editor files
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Documentation output
+/doc/
+/.yardoc/
