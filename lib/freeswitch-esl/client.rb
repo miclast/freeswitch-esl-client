@@ -267,10 +267,71 @@ module FreeswitchESL
 
     # --------------------------------------------------------------- call helpers
 
-    def originate(dialstring, options = {}, &block)
-      vars = options.map { |k, v| "#{k}=#{v}" }
-      var_str = vars.empty? ? '' : "{#{vars.join(',')}}"
-      bgapi("originate #{var_str}#{dialstring}", &block)
+    # Places an outbound call. FreeSWITCH syntax:
+    #
+    #   originate <ultra-global><global>[per-leg]<call url> <exten>|&<app>(<args>)
+    #             [<dialplan>] [<context>] [<cid_name>] [<cid_num>] [<timeout_sec>]
+    #
+    # Variable scopes (see src/switch_ivr_originate.c):
+    #   ultra_vars: `<>` applied to every leg of the originate
+    #   vars:       `{}` applied to the originated channel; also carries control
+    #               variables (origination_caller_id_number, ignore_early_media,
+    #               originate_timeout, ...)
+    #   leg_vars:   `[]` session specific variables for this destination.
+    #               NOTE: when a name exists in both, FreeSWITCH 1.11 keeps the
+    #               `{}` value (verified live) — use distinct names per scope.
+    #
+    #   client.originate('user/1000', vars: { ignore_early_media: false })
+    #   client.originate('sofia/gateway/agent/555', application: '&park()',
+    #                    vars: { origination_caller_id_number: '1001' },
+    #                    leg_vars: { effective_caller_id_name: 'Agent' })
+    #   client.originate('sofia/gateway/agent/555', exten: '1000',
+    #                    dialplan: 'XML', context: 'default',
+    #                    cid_name: 'Agent', cid_num: '1001', timeout: 30)
+    #
+    # The callback receives a Response; +res.uuid+ is the originated channel.
+    def originate(dialstring, application: nil, exten: nil, dialplan: nil, context: nil,
+                  cid_name: nil, cid_num: nil, timeout: nil,
+                  vars: {}, leg_vars: {}, ultra_vars: {}, &block)
+      target =
+        if application
+          application.to_s.start_with?('&') ? application.to_s : "&#{application}"
+        elsif exten
+          [exten, dialplan || 'XML', context || 'default'].join(' ')
+        else
+          '&park()'
+        end
+
+      args = [target]
+      if cid_name || cid_num || timeout
+        # Positional args; FreeSWITCH collapses empty tokens, so skipped slots
+        # must be the literal `undef` (see originate_function in mod_commands.c).
+        args << (dialplan || 'XML')
+        args << (context || 'default')
+        args << (cid_name || 'undef')
+        args << (cid_num || 'undef')
+        args << timeout if timeout
+      end
+
+      bgapi("originate #{build_originate_args(dialstring, vars, leg_vars, ultra_vars)} " \
+            "#{args.join(' ')}", &block)
+    end
+
+    # <ultra>{global}[leg]dialstring, in the order FreeSWITCH parses it.
+    def build_originate_args(dialstring, vars = {}, leg_vars = {}, ultra_vars = {})
+      "#{format_vars(ultra_vars, '<', '>')}#{format_vars(vars)}" \
+        "#{format_vars(leg_vars, '[', ']')}#{dialstring}"
+    end
+
+    # `{key=value,key=value}` prefix for dial strings, '' when empty.
+    def format_vars(vars, open = '{', close = '}')
+      pairs = (vars || {}).reject { |_k, v| v.nil? }.map { |k, v| "#{k}=#{escape_var(v)}" }
+      pairs.empty? ? '' : "#{open}#{pairs.join(',')}#{close}"
+    end
+
+    # Commas separate variables inside {}/[]/<>.
+    def escape_var(value)
+      value.to_s.gsub(',', '\\,')
     end
 
     def answer_call(uuid, &block)

@@ -52,6 +52,51 @@ Outside an EventMachine reactor call `client.connect!`, which spawns its own
 reactor thread. `client.ready?` tells whether auth has completed; commands sent
 earlier are queued and flushed after authentication.
 
+## Originating calls
+
+```ruby
+client.originate('sofia/gateway/agent/555',
+                 application: '&park()',           # or exten: '1000'
+                 vars: {
+                   origination_caller_id_number: '1001',
+                   origination_caller_id_name: 'Agent',
+                   ignore_early_media: 'false'
+                 },
+                 leg_vars: { effective_caller_id_name: 'Agent' }) do |res|
+  if res.success?
+    uuid = res.uuid                               # +OK <uuid>
+  else
+    warn res.reply_text                           # -ERR INVALID_GATEWAY
+  end
+end
+```
+
+A second positional form maps to FreeSWITCH's `[dialplan] [context] [cid_name]
+[cid_num] [timeout_sec]`:
+
+```ruby
+client.originate('user/1000', cid_name: 'Support', cid_num: '1001', timeout: 30)
+# => bgapi originate user/1000 &park() XML default Support 1001 30
+```
+
+When an intermediate slot is missing it is sent as the literal `undef`, which
+FreeSWITCH turns into `NULL` — empty strings would be collapsed by its argv
+parser and shift the remaining arguments.
+
+### Variable scopes
+
+FreeSWITCH accepts three prefixes on a dial string and they are not equivalent:
+
+| scope | option | applies to |
+| --- | --- | --- |
+| `<...>` | `ultra_vars` | every leg of the originate |
+| `{...}` | `vars` | the originated channel, plus originate control variables (`originate_timeout`, `ignore_early_media`, `origination_caller_id_*`, retry/`group_confirm_*`) |
+| `[...]` | `leg_vars` | per-destination session variables |
+
+They are emitted in that order: `<ultra>{global}[leg]dialstring`. Beware: when
+the same name appears in `{}` and `[]`, FreeSWITCH 1.11 keeps the `{}` value —
+use distinct names per scope instead of relying on overrides.
+
 ## Outbound mode
 
 FreeSWITCH makes the call, then hands the channel to your Ruby process:
