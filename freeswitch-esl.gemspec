@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
     Includes a binary-safe ESL frame parser, a originate helper covering FreeSWITCH
     variable scopes and positional arguments, and per-channel outbound sessions.
   DESC
-  spec.homepage      = 'https://github.com/YOUR_GITHUB_USER/freeswitch-esl'
+  spec.homepage      = 'https://github.com/miclast/freeswitch-esl'
   spec.license       = 'MIT'
   spec.required_ruby_version = '>= 3.2'
 

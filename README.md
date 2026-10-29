@@ -41,7 +41,7 @@ gem 'freeswitch-esl'
 Or straight from Git while a release is not published yet:
 
 ```ruby
-gem 'freeswitch-esl', git: 'https://github.com/YOUR_GITHUB_USER/freeswitch-esl.git', tag: 'v0.1.0'
+gem 'freeswitch-esl', git: 'https://github.com/miclast/freeswitch-esl.git', tag: 'v0.1.0'
 ```
 
 Or from a local checkout:
